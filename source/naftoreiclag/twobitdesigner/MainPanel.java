@@ -8,18 +8,41 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.util.Scanner;
 
+import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 @SuppressWarnings("serial")
 public class MainPanel extends JPanel
 {
-	public MainPanel()
+	BufferedImage image;
+	
+	public MainPanel() throws Exception
 	{
 		this.setSize(500, 500);
 		
 		this.setFocusable(true);
 		this.requestFocusInWindow();
+		
+		Scanner reader = new Scanner(System.in);
+		System.out.println("Enter name of file minus file extension: ");
+		
+		String fileName = "park";//reader.nextLine();
+		
+		image = ImageIO.read(new File(fileName + ".png"));
+		int imageWidth = image.getWidth();
+		int imageHeight = image.getHeight();
+		
+		LevelBuilder b = new LevelBuilder(imageWidth >> 3, imageHeight >> 3);
+		
+		b.setPixelsFromImage(image);
+		
+		b.saveAsFile("test");
+		
+		reader.close();
 		
 		this.addMouseMotionListener(new MouseMotionListener()
 		{
@@ -75,5 +98,7 @@ public class MainPanel extends JPanel
 		Graphics2D g2 = (Graphics2D) g;
 		
 		g2.setColor(Color.WHITE);
+		
+		g2.drawImage(image, 0, 0, null);
 	}
 }
