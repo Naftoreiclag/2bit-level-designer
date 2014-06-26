@@ -4,6 +4,9 @@ import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 // Format 0
 
@@ -69,6 +72,154 @@ public class LevelBuilder
 		pixelData = new byte[twidth << 3][theight << 3];
 	}
 	
+	// optimized row-based
+	public void saveAsFileMethod4(String fileName) throws Exception
+	{
+		List<Byte> bites = new ArrayList<Byte>();
+		
+		int pheight = theight << 3;
+		int pwidth = twidth << 3;
+
+		System.out.println("Optimizations on row-based: ");
+		for(int py = 0; py < pheight; ++ py)
+		{
+			List<Byte> rowBites = new ArrayList<Byte>();
+			
+			int size = 1;
+			byte color = pixelData[0][0];
+			for(int px = 0; px < pwidth; ++ px)
+			{
+				if(px == 0 && py == 0)
+				{
+					continue;
+				}
+				
+				if(color != pixelData[px][py] || size >= 31)
+				{
+					rowBites.add((byte) (color + (size << 3)));
+					color = pixelData[px][py];
+					size = 0;
+				}
+				else
+				{
+					++ size;
+				}
+			}
+			rowBites.add((byte) (color + (size << 3)));
+
+			
+			if(rowBites.size() > (pwidth >> 3) * 3)
+			{
+				System.out.println("Could have been optimized on row " + py);
+			}
+			
+			for(Byte b : rowBites)
+			{
+				bites.add(b);
+			}
+		}
+		
+		////////////////////
+
+		byte[] data = new byte[bites.size()];
+		for(int i = 0; i < bites.size(); ++ i)
+		{
+			data[i] = bites.get(i);
+		}
+		
+		FileOutputStream fos;
+		fos = new FileOutputStream(fileName);
+		fos.write(data);
+		fos.close();
+	}
+	
+	// row-based
+	public void saveAsFileMethod3(String fileName) throws Exception
+	{
+		List<Byte> bites = new ArrayList<Byte>();
+		
+		int pheight = theight << 3;
+		int pwidth = twidth << 3;
+		
+		for(int py = 0; py < pheight; ++ py)
+		{
+			int size = 1;
+			byte color = pixelData[0][0];
+			for(int px = 0; px < pwidth; ++ px)
+			{
+				if(px == 0 && py == 0)
+				{
+					continue;
+				}
+				
+				if(color != pixelData[px][py] || size >= 31)
+				{
+					bites.add((byte) (color + (size << 3)));
+					color = pixelData[px][py];
+					size = 0;
+				}
+				else
+				{
+					++ size;
+				}
+			}
+			bites.add((byte) (color + (size << 3)));
+		}
+		
+		////////////////////
+
+		byte[] data = new byte[bites.size()];
+		for(int i = 0; i < bites.size(); ++ i)
+		{
+			data[i] = bites.get(i);
+		}
+		
+		FileOutputStream fos;
+		fos = new FileOutputStream(fileName);
+		fos.write(data);
+		fos.close();
+	}
+	
+	public void saveAsFileMethod2(String fileName) throws Exception
+	{
+		byte[] data = new byte[(twidth * theight) << 6];
+		
+		int position = 0;
+		
+		for(int ty = 0; ty < theight; ++ ty)
+		{
+			for(int tx = 0; tx < twidth; ++ tx)
+			{
+				// If it is an empty tile
+				if(tileData[tx][ty] < decal)
+				{
+					// Don't save any decal data
+					continue;
+				}
+				
+				// Save decal data
+				for(int py = 0; py < 8; ++ py)
+				{
+					int why = (ty << 3) + py;
+					int ehx = (tx << 3);
+					
+					//ret[0] = (byte) ((data[0] << 5) ^ (data[1] << 2) ^ (data[2] >> 1));
+					//ret[1] = (byte) ((data[2] << 7) ^ (data[3] << 4) ^ (data[4] << 1) ^ (data[5] >> 2));
+					//ret[2] = (byte) ((data[5] << 6) ^ (data[6] << 3) ^  data[7]);
+					
+					data[position ++] = (byte) ((pixelData[ehx + 0][why] << 5) ^ (pixelData[ehx + 1][why] << 2) ^ (pixelData[ehx + 2][why] >> 1));
+					data[position ++] = (byte) ((pixelData[ehx + 2][why] << 7) ^ (pixelData[ehx + 3][why] << 4) ^ (pixelData[ehx + 4][why] << 1) ^ (pixelData[ehx + 5][why] >> 2));
+					data[position ++] = (byte) ((pixelData[ehx + 5][why] << 6) ^ (pixelData[ehx + 6][why] << 3) ^  pixelData[ehx + 7][why]);
+				}
+			}
+		}
+
+		FileOutputStream fos;
+		fos = new FileOutputStream(fileName);
+		fos.write(data);
+		fos.close();
+	}
+	
 	public void saveAsFile(String fileName) throws Exception
 	{
 		this.optimize();
@@ -91,8 +242,7 @@ public class LevelBuilder
 				// If the sum of ty and tx is even
 				if(((ty + tx) & 1) == 0)
 				{
-					data[position] = (byte) (tileData[tx][ty] << 4);
-					++ position;
+					data[position ++] = (byte) (tileData[tx][ty] << 4);
 				}
 				
 				// The sum of ty and tx is odd
@@ -108,7 +258,7 @@ public class LevelBuilder
 			for(int tx = 0; tx < twidth; ++ tx)
 			{
 				// If it is an empty tile
-				if(tileData[tx][ty] <= decal)
+				if(tileData[tx][ty] < decal)
 				{
 					// Don't save any decal data
 					continue;
@@ -117,22 +267,23 @@ public class LevelBuilder
 				// Save decal data
 				for(int py = 0; py < 8; ++ py)
 				{
-					data[position] = (byte) ((pixelData[0][py] << 5) + (pixelData[1][py] << 2) + (pixelData[2][py] >> 1));
-					++ position;
-					data[position] = (byte) ((pixelData[2][py] << 7) + (pixelData[3][py] << 4) + (pixelData[4][py] << 1) + (pixelData[4][py] >> 2));
-					++ position;
-					data[position] = (byte) ((pixelData[4][py] << 6) + (pixelData[5][py] << 3) + pixelData[6][py]);
-					++ position;
+					int why = (ty << 3) + py;
+					int ehx = (tx << 3);
+					
+					//ret[0] = (byte) ((data[0] << 5) ^ (data[1] << 2) ^ (data[2] >> 1));
+					//ret[1] = (byte) ((data[2] << 7) ^ (data[3] << 4) ^ (data[4] << 1) ^ (data[5] >> 2));
+					//ret[2] = (byte) ((data[5] << 6) ^ (data[6] << 3) ^  data[7]);
+					
+					data[position ++] = (byte) ((pixelData[ehx + 0][why] << 5) ^ (pixelData[ehx + 1][why] << 2) ^ (pixelData[ehx + 2][why] >> 1));
+					data[position ++] = (byte) ((pixelData[ehx + 2][why] << 7) ^ (pixelData[ehx + 3][why] << 4) ^ (pixelData[ehx + 4][why] << 1) ^ (pixelData[ehx + 5][why] >> 2));
+					data[position ++] = (byte) ((pixelData[ehx + 5][why] << 6) ^ (pixelData[ehx + 6][why] << 3) ^  pixelData[ehx + 7][why]);
 				}
 			}
 		}
 		
 		System.out.println("Number of tiles: " + numTiles);
 		System.out.println("Number of unique tiles: " + numDecalTiles);
-		for(int i = 0; i < 8; ++ i)
-		{
-			System.out.println("Color " + i + " do of the pixels count " + debug_counts[i]);
-		}
+		
 		DoNotInclude.printBytes(data);
 		
 		FileOutputStream fos;
@@ -155,6 +306,11 @@ public class LevelBuilder
 				
 				pixelData[px][py] = b;
 			}
+		}
+		
+		for(int i = 0; i < 8; ++ i)
+		{
+			System.out.println("Color " + i + " do of the pixels count " + debug_counts[i]);
 		}
 	}
 	

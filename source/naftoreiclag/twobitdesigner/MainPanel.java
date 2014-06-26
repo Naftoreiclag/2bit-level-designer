@@ -30,7 +30,7 @@ public class MainPanel extends JPanel
 		Scanner reader = new Scanner(System.in);
 		System.out.println("Enter name of file minus file extension: ");
 		
-		String fileName = "park";//reader.nextLine();
+		String fileName = "bad";//reader.nextLine();
 		
 		image = ImageIO.read(new File(fileName + ".png"));
 		int imageWidth = image.getWidth();
@@ -40,9 +40,14 @@ public class MainPanel extends JPanel
 		
 		b.setPixelsFromImage(image);
 		
-		b.saveAsFile("test");
+		b.saveAsFileMethod4("test_4");
 		
 		reader.close();
+		
+		File outputFile = new File(fileName + "_test.png");
+		ImageIO.write(image, "png", outputFile);
+		File outputFile2 = new File(fileName + "_test.bmp");
+		ImageIO.write(image, "bmp", outputFile2);
 		
 		this.addMouseMotionListener(new MouseMotionListener()
 		{
@@ -75,6 +80,8 @@ public class MainPanel extends JPanel
 			@Override
 			public void mouseReleased(MouseEvent e) { mRelease(e); }
 		});
+		
+		System.exit(0);
 	}
 	private void mMove(MouseEvent e)
 	{

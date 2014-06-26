@@ -22,8 +22,11 @@ public class Main extends JFrame
 		this.setSize(500, 500);
 		this.setLocationRelativeTo(null);
 
-		System.out.println("lofewjgfioew");
+		DoNotInclude.printBytes(DoNotInclude.encodeTest(new byte[]{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07}));
+		
 		MainPanel m = new MainPanel();
+		
+		
 		
 		this.add(m);
 	}
@@ -31,7 +34,6 @@ public class Main extends JFrame
 	public static void main(String[] args) throws Exception
 	{
 		
-		System.out.println("lofewjgfioew");
 		
 		Main m = new Main();
 		m.setVisible(true);

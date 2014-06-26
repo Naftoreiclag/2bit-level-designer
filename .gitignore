@@ -5,7 +5,7 @@ bin/*.*
 *.classpath
 hs_err*
 source/tests/*.*
-donotinclude/*.*
+donotinclude/*
 /bin
 donotinclude/vaitywallpaper/*.*
 DoNotInclude.java
