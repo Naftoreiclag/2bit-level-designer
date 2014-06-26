@@ -51,9 +51,9 @@ public class MainPanel extends JPanel
 		reader.close();
 		*/
 		
-		testComp("park");
-		testComp("bad");
-		testComp("ScrittlShip");
+		testComp("testimages/park");
+		testComp("testimages/bad");
+		testComp("testimages/ScrittlShip");
 		
 		/*
 		File outputFile = new File(fileName + "_test.png");
