@@ -77,6 +77,8 @@ public class LevelBuilder
 	{
 		List<Byte> bites = new ArrayList<Byte>();
 		
+		int rowTypes = 0;
+		
 		int pheight = theight << 3;
 		int pwidth = twidth << 3;
 
@@ -105,17 +107,35 @@ public class LevelBuilder
 					++ size;
 				}
 			}
-			rowBites.add((byte) (color + (size << 3)));
-
 			
+			// Using the compression will be worse
 			if(rowBites.size() > (pwidth >> 3) * 3)
 			{
 				System.out.println("Could have been optimized on row " + py);
+				
+				// Just save the plain data
+				for(int tx = 0; tx < twidth; ++ tx)
+				{
+					int why = py;
+					int ehx = (tx << 3);
+					
+					bites.add((byte) ((pixelData[ehx + 0][why] << 5) ^ (pixelData[ehx + 1][why] << 2) ^ (pixelData[ehx + 2][why] >> 1)));
+					bites.add((byte) ((pixelData[ehx + 2][why] << 7) ^ (pixelData[ehx + 3][why] << 4) ^ (pixelData[ehx + 4][why] << 1) ^ (pixelData[ehx + 5][why] >> 2)));
+					bites.add((byte) ((pixelData[ehx + 5][why] << 6) ^ (pixelData[ehx + 6][why] << 3) ^  pixelData[ehx + 7][why]));
+				}
 			}
 			
-			for(Byte b : rowBites)
+			// Using the compression will be better
+			else
 			{
-				bites.add(b);
+				rowBites.add((byte) (color + (size << 3)));
+				
+				//rowTypes = rowTypes | (0x1 << py);
+				
+				for(Byte b : rowBites)
+				{
+					bites.add(b);
+				}
 			}
 		}
 		
@@ -180,9 +200,10 @@ public class LevelBuilder
 		fos.close();
 	}
 	
+	// raw
 	public void saveAsFileMethod2(String fileName) throws Exception
 	{
-		byte[] data = new byte[(twidth * theight) << 6];
+		byte[] data = new byte[(((twidth * theight) << 6) >> 3) * 3];
 		
 		int position = 0;
 		
@@ -190,22 +211,11 @@ public class LevelBuilder
 		{
 			for(int tx = 0; tx < twidth; ++ tx)
 			{
-				// If it is an empty tile
-				if(tileData[tx][ty] < decal)
-				{
-					// Don't save any decal data
-					continue;
-				}
-				
 				// Save decal data
 				for(int py = 0; py < 8; ++ py)
 				{
 					int why = (ty << 3) + py;
 					int ehx = (tx << 3);
-					
-					//ret[0] = (byte) ((data[0] << 5) ^ (data[1] << 2) ^ (data[2] >> 1));
-					//ret[1] = (byte) ((data[2] << 7) ^ (data[3] << 4) ^ (data[4] << 1) ^ (data[5] >> 2));
-					//ret[2] = (byte) ((data[5] << 6) ^ (data[6] << 3) ^  data[7]);
 					
 					data[position ++] = (byte) ((pixelData[ehx + 0][why] << 5) ^ (pixelData[ehx + 1][why] << 2) ^ (pixelData[ehx + 2][why] >> 1));
 					data[position ++] = (byte) ((pixelData[ehx + 2][why] << 7) ^ (pixelData[ehx + 3][why] << 4) ^ (pixelData[ehx + 4][why] << 1) ^ (pixelData[ehx + 5][why] >> 2));
@@ -220,7 +230,7 @@ public class LevelBuilder
 		fos.close();
 	}
 	
-	public void saveAsFile(String fileName) throws Exception
+	public void saveAsFileMethod1(String fileName) throws Exception
 	{
 		this.optimize();
 		

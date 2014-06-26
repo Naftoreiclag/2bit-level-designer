@@ -20,18 +20,9 @@ public class MainPanel extends JPanel
 {
 	BufferedImage image;
 	
-	public MainPanel() throws Exception
+	public void testComp(String fileName) throws Exception
 	{
-		this.setSize(500, 500);
-		
-		this.setFocusable(true);
-		this.requestFocusInWindow();
-		
-		Scanner reader = new Scanner(System.in);
-		System.out.println("Enter name of file minus file extension: ");
-		
-		String fileName = "bad";//reader.nextLine();
-		
+
 		image = ImageIO.read(new File(fileName + ".png"));
 		int imageWidth = image.getWidth();
 		int imageHeight = image.getHeight();
@@ -39,15 +30,37 @@ public class MainPanel extends JPanel
 		LevelBuilder b = new LevelBuilder(imageWidth >> 3, imageHeight >> 3);
 		
 		b.setPixelsFromImage(image);
+
+		b.saveAsFileMethod1(fileName + "_compress_1_tiles.map");
+		b.saveAsFileMethod2(fileName + "_compress_2_raw.map");
+		b.saveAsFileMethod3(fileName + "_compress_3_strip.map");
+		b.saveAsFileMethod4(fileName + "_compress_4_strip_optimized.map");
+	}
+	
+	public MainPanel() throws Exception
+	{
+		this.setSize(500, 500);
 		
-		b.saveAsFileMethod4("test_4");
+		this.setFocusable(true);
+		this.requestFocusInWindow();
 		
+		/*
+		Scanner reader = new Scanner(System.in);
+		System.out.println("Enter name of file minus file extension: ");
+		String fileName = "park";//reader.nextLine();
 		reader.close();
+		*/
 		
+		testComp("park");
+		testComp("bad");
+		testComp("ScrittlShip");
+		
+		/*
 		File outputFile = new File(fileName + "_test.png");
 		ImageIO.write(image, "png", outputFile);
 		File outputFile2 = new File(fileName + "_test.bmp");
 		ImageIO.write(image, "bmp", outputFile2);
+		*/
 		
 		this.addMouseMotionListener(new MouseMotionListener()
 		{
