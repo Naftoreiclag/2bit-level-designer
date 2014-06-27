@@ -5,6 +5,8 @@ import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -81,6 +83,10 @@ public class LevelBuilder
 		
 		int pheight = theight << 3;
 		int pwidth = twidth << 3;
+		
+		bites.add(format);
+		bites.add((byte) twidth);
+		bites.add((byte) theight);
 
 		System.out.println("Optimizations on row-based: ");
 		for(int py = 0; py < pheight; ++ py)
@@ -161,22 +167,22 @@ public class LevelBuilder
 		int pheight = theight << 3;
 		int pwidth = twidth << 3;
 		
+		bites.add(format);
+		bites.add((byte) twidth);
+		bites.add((byte) theight);
+		
 		for(int py = 0; py < pheight; ++ py)
 		{
 			int size = 1;
-			byte color = pixelData[0][0];
-			for(int px = 0; px < pwidth; ++ px)
+			byte color = pixelData[0][py];
+			for(int px = 1; px < pwidth; ++ px)
 			{
-				if(px == 0 && py == 0)
-				{
-					continue;
-				}
 				
 				if(color != pixelData[px][py] || size >= 31)
 				{
-					bites.add((byte) (color + (size << 3)));
+					bites.add((byte) ((size << 3) + color));
 					color = pixelData[px][py];
-					size = 0;
+					size = 1;
 				}
 				else
 				{
@@ -424,5 +430,52 @@ public class LevelBuilder
 				// Other tests?
 			}
 		}
+	}
+
+	public static BufferedImage debugImage(String string) throws Exception
+	{
+		byte data[] = Files.readAllBytes(Paths.get(string));
+		
+		byte type = data[0];
+		
+		int twidth = data[1] & 0xff;
+		int theight = data[2] & 0xff;
+		
+		System.err.println(twidth + ", " + theight);
+		
+		int pwidth = twidth << 3;
+		int pheight = theight << 3;
+		
+		System.err.println(pwidth + ", " + pheight);
+		
+		BufferedImage ret = new BufferedImage(pwidth, pheight, BufferedImage.TYPE_INT_RGB);
+		
+		int ehx = 0;
+		int why = 0;
+		for(int i = 3; i < data.length; ++ i)
+		{
+			byte color = (byte) (data[i] & 0x07);
+			int width = (data[i] & 0xff) >> 3;
+		
+			System.out.println("clr: " + color + " width: " + width);
+			
+			for(int x = 0; x < width; ++ x)
+			{
+				//System.out.println((ehx + x) + " " + why);
+				
+				ret.setRGB(ehx + x, why, pallete[color] | 0xFF000000);
+			}
+		
+			ehx += width;
+			
+			if(ehx >= pwidth)
+			{
+				System.out.println(ehx);
+				ehx = 0;
+				++ why;
+			}
+		}
+		
+		return ret;
 	}
 }

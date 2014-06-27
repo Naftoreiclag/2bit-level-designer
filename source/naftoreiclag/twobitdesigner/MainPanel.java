@@ -10,7 +10,6 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.Scanner;
 
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
@@ -19,10 +18,10 @@ import javax.swing.JPanel;
 public class MainPanel extends JPanel
 {
 	BufferedImage image;
+	BufferedImage imageReconstru;
 	
 	public void testComp(String fileName) throws Exception
 	{
-
 		image = ImageIO.read(new File(fileName + ".png"));
 		int imageWidth = image.getWidth();
 		int imageHeight = image.getHeight();
@@ -51,9 +50,11 @@ public class MainPanel extends JPanel
 		reader.close();
 		*/
 		
-		testComp("testimages/park");
 		testComp("testimages/bad");
 		testComp("testimages/ScrittlShip");
+		testComp("testimages/park");
+		
+		imageReconstru = LevelBuilder.debugImage("testimages/park_compress_3_strip.map");
 		
 		/*
 		File outputFile = new File(fileName + "_test.png");
@@ -93,8 +94,6 @@ public class MainPanel extends JPanel
 			@Override
 			public void mouseReleased(MouseEvent e) { mRelease(e); }
 		});
-		
-		System.exit(0);
 	}
 	private void mMove(MouseEvent e)
 	{
@@ -120,5 +119,6 @@ public class MainPanel extends JPanel
 		g2.setColor(Color.WHITE);
 		
 		g2.drawImage(image, 0, 0, null);
+		g2.drawImage(this.imageReconstru, 256, 0, null);
 	}
 }
