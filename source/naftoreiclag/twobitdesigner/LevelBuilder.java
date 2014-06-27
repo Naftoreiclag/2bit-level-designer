@@ -73,6 +73,59 @@ public class LevelBuilder
 		
 		pixelData = new byte[twidth << 3][theight << 3];
 	}
+
+	
+	// column-inconsiderate row-based
+	public void saveAsFileMethod5(String fileName) throws Exception
+	{
+		List<Byte> bites = new ArrayList<Byte>();
+		
+		int pheight = theight << 3;
+		int pwidth = twidth << 3;
+		
+		bites.add(format);
+		bites.add((byte) twidth);
+		bites.add((byte) theight);
+
+		byte color = pixelData[0][0];
+		int size = 1;
+		
+		for(int py = 0; py < pheight; ++ py)
+		{
+			for(int px = 0; px < pwidth; ++ px)
+			{
+				if(px == 0 && py == 0)
+				{
+					continue;
+				}
+				
+				if(color != pixelData[px][py] || size >= 31)
+				{
+					bites.add((byte) ((size << 3) + color));
+					color = pixelData[px][py];
+					size = 1;
+				}
+				else
+				{
+					++ size;
+				}
+			}
+		}
+		bites.add((byte) (color + (size << 3)));
+		
+		////////////////////
+
+		byte[] data = new byte[bites.size()];
+		for(int i = 0; i < bites.size(); ++ i)
+		{
+			data[i] = bites.get(i);
+		}
+		
+		FileOutputStream fos;
+		fos = new FileOutputStream(fileName);
+		fos.write(data);
+		fos.close();
+	}
 	
 	// optimized row-based
 	public void saveAsFileMethod4(String fileName) throws Exception
@@ -432,7 +485,48 @@ public class LevelBuilder
 		}
 	}
 
-	public static BufferedImage debugImage(String string) throws Exception
+	public static BufferedImage debugImageMethod3(String string) throws Exception
+	{
+		byte data[] = Files.readAllBytes(Paths.get(string));
+		
+		byte type = data[0];
+		
+		int twidth = data[1] & 0xff;
+		int theight = data[2] & 0xff;
+		
+		int pwidth = twidth << 3;
+		int pheight = theight << 3;
+		
+		BufferedImage ret = new BufferedImage(pwidth, pheight, BufferedImage.TYPE_INT_RGB);
+		
+		int ehx = 0;
+		int why = 0;
+		for(int i = 3; i < data.length; ++ i)
+		{
+			byte color = (byte) (data[i] & 0x07);
+			int width = (data[i] & 0xff) >> 3;
+			
+			for(int x = 0; x < width; ++ x)
+			{
+				//System.out.println((ehx + x) + " " + why);
+				
+				ret.setRGB(ehx + x, why, pallete[color] | 0xFF000000);
+			}
+		
+			ehx += width;
+			
+			if(ehx >= pwidth)
+			{
+				ehx = 0;
+				++ why;
+			}
+		}
+		
+		return ret;
+	}
+	
+
+	public static BufferedImage debugImageMethod5(String string) throws Exception
 	{
 		byte data[] = Files.readAllBytes(Paths.get(string));
 		
@@ -452,6 +546,7 @@ public class LevelBuilder
 		
 		int ehx = 0;
 		int why = 0;
+		
 		for(int i = 3; i < data.length; ++ i)
 		{
 			byte color = (byte) (data[i] & 0x07);
@@ -461,18 +556,13 @@ public class LevelBuilder
 			
 			for(int x = 0; x < width; ++ x)
 			{
-				//System.out.println((ehx + x) + " " + why);
-				
-				ret.setRGB(ehx + x, why, pallete[color] | 0xFF000000);
-			}
-		
-			ehx += width;
-			
-			if(ehx >= pwidth)
-			{
-				System.out.println(ehx);
-				ehx = 0;
-				++ why;
+				ret.setRGB(ehx ++, why, pallete[color] | 0xFF000000);
+
+				if(ehx >= pwidth)
+				{
+					ehx = 0;
+					++ why;
+				}
 			}
 		}
 		

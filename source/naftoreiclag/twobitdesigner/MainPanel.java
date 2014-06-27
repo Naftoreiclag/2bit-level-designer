@@ -18,7 +18,8 @@ import javax.swing.JPanel;
 public class MainPanel extends JPanel
 {
 	BufferedImage image;
-	BufferedImage imageReconstru;
+	BufferedImage imageReconstru1;
+	BufferedImage imageReconstru2;
 	
 	public void testComp(String fileName) throws Exception
 	{
@@ -34,6 +35,7 @@ public class MainPanel extends JPanel
 		b.saveAsFileMethod2(fileName + "_compress_2_raw.map");
 		b.saveAsFileMethod3(fileName + "_compress_3_strip.map");
 		b.saveAsFileMethod4(fileName + "_compress_4_strip_optimized.map");
+		b.saveAsFileMethod5(fileName + "_compress_5_strip_inconsiderate.map");
 	}
 	
 	public MainPanel() throws Exception
@@ -54,7 +56,8 @@ public class MainPanel extends JPanel
 		testComp("testimages/ScrittlShip");
 		testComp("testimages/park");
 		
-		imageReconstru = LevelBuilder.debugImage("testimages/park_compress_3_strip.map");
+		imageReconstru1 = LevelBuilder.debugImageMethod3("testimages/park_compress_3_strip.map");
+		imageReconstru2 = LevelBuilder.debugImageMethod5("testimages/park_compress_5_strip_inconsiderate.map");
 		
 		/*
 		File outputFile = new File(fileName + "_test.png");
@@ -119,6 +122,7 @@ public class MainPanel extends JPanel
 		g2.setColor(Color.WHITE);
 		
 		g2.drawImage(image, 0, 0, null);
-		g2.drawImage(this.imageReconstru, 256, 0, null);
+		g2.drawImage(this.imageReconstru1, 256, 0, null);
+		g2.drawImage(this.imageReconstru2, 0, 256, null);
 	}
 }
