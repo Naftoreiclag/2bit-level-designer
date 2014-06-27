@@ -59,6 +59,8 @@ public class MainPanel extends JPanel
 		imageReconstru1 = LevelBuilder.debugImageMethod3("testimages/park_compress_3_strip.map");
 		imageReconstru2 = LevelBuilder.debugImageMethod5("testimages/park_compress_5_strip_inconsiderate.map");
 		
+		System.exit(0);
+		
 		/*
 		File outputFile = new File(fileName + "_test.png");
 		ImageIO.write(image, "png", outputFile);
