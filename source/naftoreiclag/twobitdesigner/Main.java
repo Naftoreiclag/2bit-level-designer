@@ -1,6 +1,7 @@
 package naftoreiclag.twobitdesigner;
 
 import javax.swing.JFrame;
+import javax.swing.JScrollPane;
 
 @SuppressWarnings("serial")
 public class Main extends JFrame
@@ -14,13 +15,19 @@ public class Main extends JFrame
 		this.setLocationRelativeTo(null);
 		
 		MainPanel m = new MainPanel();
+		
+		JScrollPane scrollPane = new JScrollPane(m);
 
-		this.add(m);
+		this.add(scrollPane);
 	}
 	
 	public static void main(String[] args) throws Exception
 	{
+		/*
 		Main m = new Main();
 		m.setVisible(true);
+		*/
+		
+		
 	}
 }
