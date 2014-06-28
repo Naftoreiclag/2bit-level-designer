@@ -29,5 +29,6 @@ public class Main extends JFrame
 		*/
 		ObjectConverter oc = new ObjectConverter("testimages/tree");
 		oc.saveAsFileMethod1();
+		oc.saveAsFileMethod2();
 	}
 }

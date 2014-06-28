@@ -158,6 +158,76 @@ public class ObjectConverter
 		}
 	}
 	
+	public void saveAsFileMethod2() throws Exception
+	{
+		List<Byte> bites = new ArrayList<Byte>();
+		
+		bites.add((byte) 0);
+		bites.add((byte) twidth);
+		bites.add((byte) theight);
+
+		byte color = pixelData[0][0];
+		int size = 1;
+		
+		for(int py = 0; py < pheight; ++ py)
+		{
+			for(int px = 0; px < pwidth; ++ px)
+			{
+				if(px == 0 && py == 0)
+				{
+					continue;
+				}
+				
+				if(color == 8)
+				{
+					if(color != pixelData[px][py] || size >= 127)
+					{
+						bites.add((byte) (size + 0x80));
+						color = pixelData[px][py];
+						size = 1;
+						
+						continue;
+					}
+				}
+				else
+				{
+					if(color != pixelData[px][py] || size >= 31)
+					{
+						bites.add((byte) ((size << 3) + color));
+						color = pixelData[px][py];
+						size = 1;
+						
+						continue;
+					}
+				}
+				
+				++ size;
+			}
+		}
+		if(color == 8)
+		{
+			bites.add((byte) (size + 0x80));
+		}
+		else
+		{
+			bites.add((byte) ((size << 3) + color));
+		}
+		
+		////////////////////
+
+		byte[] data = new byte[bites.size()];
+		for(int i = 0; i < bites.size(); ++ i)
+		{
+			data[i] = bites.get(i);
+		}
+		
+		FileOutputStream fos;
+		fos = new FileOutputStream(fileName + "_object_2");
+		fos.write(data);
+		fos.close();
+		System.out.println("saved" + bites.size() + fileName + "_object_2");
+	}
+	
 	// column-inconsiderate row-based
 	public void saveAsFileMethod1() throws Exception
 	{
