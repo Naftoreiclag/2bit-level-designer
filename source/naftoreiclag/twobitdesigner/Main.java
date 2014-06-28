@@ -27,7 +27,7 @@ public class Main extends JFrame
 		Main m = new Main();
 		m.setVisible(true);
 		*/
-		
-		
+		ObjectConverter oc = new ObjectConverter("testimages/tree");
+		oc.saveAsFileMethod1();
 	}
 }

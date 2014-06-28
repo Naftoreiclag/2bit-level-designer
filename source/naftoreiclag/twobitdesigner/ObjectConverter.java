@@ -2,13 +2,16 @@ package naftoreiclag.twobitdesigner;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
 public class ObjectConverter
 {
-	String fileName;
+	public final String fileName;
 	
 	public static final int[] pallete = {0x000000, 0x333333, 0x555555, 0x777777, 0x999999, 0xBBBBBB, 0xDDDDDD, 0xFFFFFF};
 	
@@ -27,6 +30,8 @@ public class ObjectConverter
 	
 	public ObjectConverter(String fileName)
 	{
+		this.fileName = fileName;
+		
 		BufferedImage image = null;
 		try
 		{
@@ -59,7 +64,12 @@ public class ObjectConverter
 				if((image.getRGB(x, y) & 0xff000000) != 0)
 				{
 					topPad = y;
+					break;
 				}
+			}
+			if(topPad != -1)
+			{
+				break;
 			}
 		}
 		if(topPad == -1)
@@ -77,7 +87,12 @@ public class ObjectConverter
 				if((image.getRGB(x, y) & 0xff000000) != 0)
 				{
 					leftPad = x;
+					break;
 				}
+			}
+			if(leftPad != -1)
+			{
+				break;
 			}
 		}
 		
@@ -90,7 +105,12 @@ public class ObjectConverter
 				if((image.getRGB(x, (imageHeight - y) - 1) & 0xff000000) != 0)
 				{
 					bottomPad = y;
+					break;
 				}
+			}
+			if(bottomPad != -1)
+			{
+				break;
 			}
 		}
 
@@ -104,11 +124,18 @@ public class ObjectConverter
 				if((image.getRGB((imageWidth - x) - 1, y) & 0xff000000) != 0)
 				{
 					rightPad = x;
+					break;
 				}
+			}
+			if(rightPad != -1)
+			{
+				break;
 			}
 		}
 		
 		//
+		
+		System.out.println("t: " + topPad + " l: " + leftPad + " b: " + bottomPad + " r: " + rightPad);
 		
 		this.topPadding = topPad;
 		this.leftPadding = leftPad;
@@ -129,6 +156,85 @@ public class ObjectConverter
 				pixelData[x][y] = getByteFromRGB(image.getRGB(leftPadding + x, topPadding + y));
 			}
 		}
+	}
+	
+	// column-inconsiderate row-based
+	public void saveAsFileMethod1() throws Exception
+	{
+		List<Byte> bites = new ArrayList<Byte>();
+		
+		bites.add((byte) 0);
+		bites.add((byte) twidth);
+		bites.add((byte) theight);
+
+		byte color = 0;
+		for(int py = 0; py < pheight; ++ py)
+		{
+			for(int px = 0; px < pwidth; ++ px)
+			{
+				if(pixelData[px][py] != 8)
+				{
+					color = pixelData[px][py];
+				}
+			}
+		}
+		int size = 1;
+		
+		for(int py = 0; py < pheight; ++ py)
+		{
+			for(int px = 0; px < pwidth; ++ px)
+			{
+				if(px == 0 && py == 0)
+				{
+					continue;
+				}
+				
+				if(size >= 31)
+				{
+					bites.add((byte) ((size << 3) + color));
+					
+					if(pixelData[px][py] != 8)
+					{
+						color = pixelData[px][py];
+					}
+					size = 1;
+					
+					continue;
+				}
+				
+				if(pixelData[px][py] == 8)
+				{
+					++ size;
+					continue;
+				}
+				
+				if(color != pixelData[px][py])
+				{
+					bites.add((byte) ((size << 3) + color));
+					color = pixelData[px][py];
+					size = 1;
+					
+					continue;
+				}
+				
+				++ size;
+			}
+		}
+		bites.add((byte) (color + (size << 3)));
+		
+		////////////////////
+
+		byte[] data = new byte[bites.size()];
+		for(int i = 0; i < bites.size(); ++ i)
+		{
+			data[i] = bites.get(i);
+		}
+		
+		FileOutputStream fos;
+		fos = new FileOutputStream(fileName + "_object_1");
+		fos.write(data);
+		fos.close();
+		System.out.println("saved" + bites.size() + fileName + "_object_1");
 	}
 	
 	public static byte getByteFromRGB(int rgb)
