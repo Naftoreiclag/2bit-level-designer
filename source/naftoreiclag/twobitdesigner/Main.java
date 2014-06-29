@@ -23,12 +23,10 @@ public class Main extends JFrame
 	
 	public static void main(String[] args) throws Exception
 	{
-		/*
 		Main m = new Main();
 		m.setVisible(true);
-		*/
+		
 		ObjectConverter oc = new ObjectConverter("testimages/tree");
-		oc.saveAsFileMethod1();
 		oc.saveAsFileMethod2();
 	}
 }

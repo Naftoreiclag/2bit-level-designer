@@ -20,8 +20,6 @@ import javax.swing.JScrollPane;
 @SuppressWarnings("serial")
 public class MainPanel extends JPanel
 {
-	Aaaaaaaaa aaa;
-	
 	/*
 	public void testComp(String fileName) throws Exception
 	{
@@ -44,25 +42,6 @@ public class MainPanel extends JPanel
 	public BufferedImage image;
 	
 	public JLabel picLabel;
-	public static class Aaaaaaaaa extends JPanel
-	{
-		public BufferedImage image;
-		
-		public Aaaaaaaaa() throws Exception
-		{
-			this.setSize(500, 500);
-			image = LevelBuilder.debugImageMethod5("testimages/jellystatue2_compress_5_strip_inconsiderate.map");
-		}
-		
-		@Override
-		public void paint(Graphics g)
-		{
-			Graphics2D g2 = (Graphics2D) g;
-			
-			g2.setColor(Color.WHITE);
-			g2.drawImage(image, 0, 0, null);
-		}
-	}
 	
 	public MainPanel() throws Exception
 	{
@@ -74,41 +53,7 @@ public class MainPanel extends JPanel
 		
 		picLabel = new JLabel(new ImageIcon(image));
 		
-		
 		this.add(picLabel);
-		
-		/*
-		aaa = new Aaaaaaaaa();
-		
-		JScrollPane scrollPane = new JScrollPane(aaa);
-		
-		this.add(scrollPane);
-		*/
-		
-		/*
-		Scanner reader = new Scanner(System.in);
-		System.out.println("Enter name of file minus file extension: ");
-		String fileName = "park";//reader.nextLine();
-		reader.close();
-		*/
-		/*
-		testComp("testimages/bad");
-		testComp("testimages/jellystatue2");
-		testComp("testimages/ScrittlShip");
-		testComp("testimages/park");
-		
-		imageReconstru1 = LevelBuilder.debugImageMethod3("testimages/park_compress_3_strip.map");
-		imageReconstru2 = LevelBuilder.debugImageMethod5("testimages/park_compress_5_strip_inconsiderate.map");
-		
-		System.exit(0);
-		*/
-		
-		/*
-		File outputFile = new File(fileName + "_test.png");
-		ImageIO.write(image, "png", outputFile);
-		File outputFile2 = new File(fileName + "_test.bmp");
-		ImageIO.write(image, "bmp", outputFile2);
-		*/
 		
 		this.addMouseMotionListener(new MouseMotionListener()
 		{

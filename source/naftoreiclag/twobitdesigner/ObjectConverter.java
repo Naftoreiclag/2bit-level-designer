@@ -20,10 +20,15 @@ public class ObjectConverter
 	public final int pwidth;
 	public final int pheight;
 	
+	public final int originX;
+	public final int originY;
+	
 	public final int topPadding;
 	public final int leftPadding;
 	public final int bottomPadding;
 	public final int rightPadding;
+	
+	public static final byte format = 0x00;
 	
 	private final boolean[][] collisionData;
 	private final byte[][] pixelData;
@@ -32,17 +37,28 @@ public class ObjectConverter
 	{
 		this.fileName = fileName;
 		
-		BufferedImage image = null;
+		BufferedImage imageMain = null;
 		try
 		{
-			image = ImageIO.read(new File(fileName + ".png"));
+			imageMain = ImageIO.read(new File(fileName + ".png"));
 		}
 		catch (IOException e)
 		{
 			e.printStackTrace();
 		}
-		int imageWidth = image.getWidth();
-		int imageHeight = image.getHeight();
+
+		BufferedImage imageCollision = null;
+		try
+		{
+			imageCollision = ImageIO.read(new File(fileName + "_collision.png"));
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+		
+		int imageWidth = imageMain.getWidth();
+		int imageHeight = imageMain.getHeight();
 		
 		if((imageWidth & 0x7) != 0 || (imageHeight & 0x7) != 0)
 		{
@@ -54,6 +70,26 @@ public class ObjectConverter
 		theight = imageHeight >> 3;
 		
 		collisionData = new boolean[twidth][theight];
+		
+		int originX = 0;
+		int originY = 0;
+		for(int y = 0; y < theight; ++ y)
+		{
+			for(int x = 0; x < twidth; ++ x)
+			{
+				if((imageCollision.getRGB(x << 3, y << 3) & 0xFFFF0000) == 0xFFFF0000)
+				{
+					collisionData[x][y] = true;
+				}
+				if((imageCollision.getRGB(x << 3, y << 3) & 0xFF00FF00) == 0xFF00FF00)
+				{
+					originX = x;
+					originY = y;
+				}
+			}
+		}
+		this.originX = originX;
+		this.originY = originY;
 
 		int topPad = -1;
 		for(int y = 0; y < imageHeight; ++ y)
@@ -61,7 +97,7 @@ public class ObjectConverter
 			for(int x = 0; x < imageWidth; ++ x)
 			{
 				// If alpha is opaque
-				if((image.getRGB(x, y) & 0xff000000) != 0)
+				if((imageMain.getRGB(x, y) & 0xff000000) != 0)
 				{
 					topPad = y;
 					break;
@@ -84,7 +120,7 @@ public class ObjectConverter
 			for(int y = 0; y < imageHeight; ++ y)
 			{
 				// If alpha is opaque
-				if((image.getRGB(x, y) & 0xff000000) != 0)
+				if((imageMain.getRGB(x, y) & 0xff000000) != 0)
 				{
 					leftPad = x;
 					break;
@@ -102,7 +138,7 @@ public class ObjectConverter
 			for(int x = 0; x < imageWidth; ++ x)
 			{
 				// If alpha is opaque
-				if((image.getRGB(x, (imageHeight - y) - 1) & 0xff000000) != 0)
+				if((imageMain.getRGB(x, (imageHeight - y) - 1) & 0xff000000) != 0)
 				{
 					bottomPad = y;
 					break;
@@ -121,7 +157,7 @@ public class ObjectConverter
 			for(int y = 0; y < imageHeight; ++ y)
 			{
 				// If alpha is opaque
-				if((image.getRGB((imageWidth - x) - 1, y) & 0xff000000) != 0)
+				if((imageMain.getRGB((imageWidth - x) - 1, y) & 0xff000000) != 0)
 				{
 					rightPad = x;
 					break;
@@ -153,7 +189,7 @@ public class ObjectConverter
 		{
 			for(int y = 0; y < pheight; ++ y)
 			{
-				pixelData[x][y] = getByteFromRGB(image.getRGB(leftPadding + x, topPadding + y));
+				pixelData[x][y] = getByteFromRGB(imageMain.getRGB(leftPadding + x, topPadding + y));
 			}
 		}
 	}
@@ -162,10 +198,40 @@ public class ObjectConverter
 	{
 		List<Byte> bites = new ArrayList<Byte>();
 		
-		bites.add((byte) 0);
+		bites.add((byte) ObjectConverter.format);
 		bites.add((byte) twidth);
 		bites.add((byte) theight);
+		bites.add((byte) originX);
+		bites.add((byte) originY);
+		bites.add((byte) ((leftPadding << 3) + topPadding));
+		bites.add((byte) ((rightPadding << 3) + bottomPadding));
 
+		// Collision Data
+		
+		int position = 0;
+		byte buildAByte = 0;
+		for(int ty = 0; ty < theight; ++ ty)
+		{
+			for(int tx = 0; tx < twidth; ++ tx)
+			{
+				if(collisionData[tx][ty])
+				{
+					buildAByte = (byte) (buildAByte | (1 << position));
+				}
+				
+				++ position;
+				
+				if(position == 8)
+				{
+					bites.add(buildAByte);
+					
+					position = 0;
+				}
+			}
+		}
+		
+		// Color Data
+		
 		byte color = pixelData[0][0];
 		int size = 1;
 		
@@ -191,7 +257,7 @@ public class ObjectConverter
 				}
 				else
 				{
-					if(color != pixelData[px][py] || size >= 31)
+					if(color != pixelData[px][py] || size >= 15)
 					{
 						bites.add((byte) ((size << 3) + color));
 						color = pixelData[px][py];
@@ -213,7 +279,7 @@ public class ObjectConverter
 			bites.add((byte) ((size << 3) + color));
 		}
 		
-		////////////////////
+		// Writing
 
 		byte[] data = new byte[bites.size()];
 		for(int i = 0; i < bites.size(); ++ i)
@@ -229,6 +295,7 @@ public class ObjectConverter
 	}
 	
 	// column-inconsiderate row-based
+	/*
 	public void saveAsFileMethod1() throws Exception
 	{
 		List<Byte> bites = new ArrayList<Byte>();
@@ -292,6 +359,28 @@ public class ObjectConverter
 		}
 		bites.add((byte) (color + (size << 3)));
 		
+		int position = 0;
+		byte buildAByte = 0;
+		for(int ty = 0; ty < theight; ++ ty)
+		{
+			for(int tx = 0; tx < twidth; ++ tx)
+			{
+				if(collisionData[tx][ty])
+				{
+					buildAByte = (byte) (buildAByte | (1 << position));
+				}
+				
+				++ position;
+				
+				if(position == 8)
+				{
+					bites.add(buildAByte);
+					
+					position = 0;
+				}
+			}
+		}
+		
 		////////////////////
 
 		byte[] data = new byte[bites.size()];
@@ -306,6 +395,7 @@ public class ObjectConverter
 		fos.close();
 		System.out.println("saved" + bites.size() + fileName + "_object_1");
 	}
+	*/
 	
 	public static byte getByteFromRGB(int rgb)
 	{
