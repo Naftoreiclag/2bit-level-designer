@@ -1,6 +1,6 @@
 package naftoreiclag.twobitdesigner;
 
-public class AreaSaver
+public class Area
 {
-	
+
 }
